@@ -1,0 +1,131 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <script src="scripts/sql.js-master/js/sql.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/index.css">
+    <script type='application/javascript' src='scripts/fastclick-master/lib/fastclick.js'></script>
+</head>
+<body>
+    <div class="container"><a href="index.html" class="button"> wróć </a>
+        <div class="content">
+            <br>
+            Wybierz klasę:<br>
+            <select name="klasa" id="klasa"></select><br><br>
+            Wybierz dzien:<br>
+            <select name="dzien" id="dzien"></select><br><br>            
+            <div class='button' onclick="wybierz();">
+                Pokaż plan
+            </div>            
+            <div id="miejsce"></div>
+            <div id="koniu"></div>      
+        </div>
+    </div>
+    <script type="text/javascript">
+       
+        function loadBinaryFile(path, success) 
+        {
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", path, true);
+            xhr.responseType = "arraybuffer";
+                        
+            xhr.onload = function () 
+            {
+                var data = new Uint8Array(xhr.response);
+                var arr = new Array();
+                for (var i = 0; i != data.length; ++i) arr[i] = String.fromCharCode(data[i]);
+                success(arr.join(""));
+            };
+        xhr.send();
+        };
+
+        var koniu = document.getElementById("koniu");
+        var klasa = document.getElementById('klasa');
+        var dzien = document.getElementById('dzien');
+        var d = new Date();
+        var min1 = d.getMinutes();
+        var h = d.getHours();
+        var dziennn = d.getDay();
+        var dni = ["Niedziela","Poniedziałek","Wtorek","Środa","Czwartek","Piątek","Sobota"];
+
+        if (typeof (Storage) !== "undefined") {
+            var local_klasa = localStorage.getItem("klasa");
+        }
+        else {
+            document.getElementById("miejsce").innerHTML = "dont work";
+        }
+        
+            var sqldb = new SQL.Database(localStorage.getItem("data"));
+            var stmt = sqldb.prepare("SELECT DISTINCT klasa FROM plan");
+            
+            if (local_klasa != null)
+            {
+                klasa.options[klasa.options.length] = new Option(local_klasa, local_klasa);
+            }
+            
+            while (stmt.step()) 
+            {
+                var row = stmt.getAsObject();                
+                klasa.options[klasa.options.length] = new Option(row['klasa'], row['klasa']);
+            }
+
+            var stmt = sqldb.prepare("SELECT DISTINCT * FROM dzien LIMIT 5");
+
+            dzien.options[dzien.options.length] = new Option(dni[dziennn], dziennn);
+            while (stmt.step()) 
+            {
+                var row = stmt.getAsObject();                
+                dzien.options[dzien.options.length] = new Option(row['nazwa'], row['id']);
+            }
+
+            koniu.innerHTML = " ";
+            var sqldb = new SQL.Database(localStorage.getItem("data"));         
+
+            var stmt = sqldb.prepare("SELECT * FROM plan WHERE klasa='" + local_klasa + "' AND dzien='" + dziennn + "'");
+            while (stmt.step()) 
+            {
+                var row = stmt.getAsObject();
+                if (row['przedmiot'].length > 3) 
+                {
+                    var stmtg = sqldb.prepare("SELECT * FROM godziny WHERE id = " + row['godzina'] + "");
+
+                    while (stmtg.step()) 
+                    {
+                        var rowg = stmtg.getAsObject();
+                        godzina = row['godzina'];
+                        godzina++;
+                        koniu.innerHTML += "Dziesiejszy plan:<br><br>";
+                        koniu.innerHTML += rowg['od'] + " - " + rowg['do'] + "<br><b>" + row['przedmiot'] + "</b> " + row['sala'] + "<br>";
+                    }
+                }
+
+            }
+
+
+
+        function wybierz() 
+        {
+                koniu.innerHTML =" ";
+                var sqldb = new SQL.Database(localStorage.getItem("data"));
+                var stmt = sqldb.prepare("SELECT * FROM plan WHERE klasa='" + klasa.value + "' AND dzien='" + dzien.value + "'");
+                while (stmt.step()) 
+                {
+                    var row = stmt.getAsObject();
+                    if(row['przedmiot'].length>3) 
+                    {
+                        var stmtg = sqldb.prepare("SELECT * FROM godziny WHERE id = " + row['godzina'] + "");
+
+                        while (stmtg.step()) 
+                        {
+                            var rowg = stmtg.getAsObject();
+                            godzina = row['godzina'];
+                            godzina++;
+                            koniu.innerHTML += rowg['od']+" - "+rowg['do']+"<br><b>"+row['przedmiot']+"</b> "+row['sala']+"<br>";
+                        }
+                    }                    
+                }
+        }
+        
+    </script>
+</body>
+</html>

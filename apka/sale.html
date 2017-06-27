@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <script src="scripts/sql.js-master/js/sql.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/index.css">
+    <script type='application/javascript' src='scripts/fastclick-master/lib/fastclick.js'></script>
+</head>
+<body>
+    <div class="container"><a href="index.html" class="button"> wróć </a>
+        <div class="content">
+            Pokaż wolną salę o numerze:<br>
+            <select name="sala" id="sala">
+            <option value="">Wszystkie</option>
+            </select><br><br>
+            Pokaż wolną salę o godzinie:<br>
+            <select name="godziny" id="godziny"></select><br><br>
+            
+            <div class='button' onclick="wybierz();">
+                Pokaż wolne sala
+            </div>
+            <div id="miejsce"></div>
+            <div id="koniu"></div>
+        </div>
+    </div>
+    
+    <script type="text/javascript">
+
+        function loadBinaryFile(path, success) 
+        {
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", path, true);
+            xhr.responseType = "arraybuffer";
+                        
+            xhr.onload = function () 
+            {
+                var data = new Uint8Array(xhr.response);
+                var arr = new Array();
+                for (var i = 0; i != data.length; ++i) arr[i] = String.fromCharCode(data[i]);
+                success(arr.join(""));
+            };
+        xhr.send();
+        };
+
+        var godziny = document.getElementById('godziny');
+        var sala = document.getElementById('sala');
+        var sale = [];
+        var d = new Date();
+        var dzien = d.getDay();
+
+        var sqldb = new SQL.Database(localStorage.getItem("data"));
+            var stmt = sqldb.prepare("SELECT DISTINCT * FROM godziny");
+
+            while (stmt.step()) 
+            {
+                var row = stmt.getAsObject();
+                var godzinaDoPokzania=row['od']+"-"+row['do'];
+                godziny.options[godziny.options.length] = new Option(godzinaDoPokzania, row['id']);
+            }
+        
+            stmt = sqldb.prepare("SELECT DISTINCT numer FROM sale");
+            
+            while (stmt.step()) 
+            {
+                var row = stmt.getAsObject();
+                sala.options[sala.options.length] = new Option(row['numer'], row['numer']);
+            }
+
+        function wybierz() 
+        {
+            document.getElementById("koniu").innerHTML = ' ';
+            var godzina = godziny.value;
+            var koniu = document.getElementById("koniu");
+
+                var sqldb = new SQL.Database(localStorage.getItem("data"));
+                
+                if(sala.value!='')
+                {
+                    var stmt = sqldb.prepare("SELECT DISTINCT * FROM sale WHERE numer LIKE '%" + sala.value + "%' LIMIT 1");
+                }
+                else
+                {
+                    var stmt = sqldb.prepare("SELECT DISTINCT * FROM sale");
+                }
+
+                var licznikTablicy=0;
+                
+                while(stmt.step())
+                {
+                    var row= stmt.getAsObject();
+                    sale[licznikTablicy]=row['numer']; 
+                    licznikTablicy++;
+                } 
+
+                var stmt2 = sqldb.prepare("SELECT * FROM plan WHERE dzien='" + dzien + "' AND godzina='" + godziny.value + "'");
+                
+                while(stmt2.step())
+                {
+                    var row= stmt2.getAsObject();
+                        
+                    if(row['sala'].length<=3)
+                    {
+                        for(var licznik=0 ; licznik<=licznikTablicy ; licznik++)
+                        {
+                            if(sale[licznik]==row['sala'])
+                            {
+                                sale[licznik]="";
+                            }
+                        }
+                    }
+                    else
+                    {
+                        var imiona = row['sala'].split(' ');
+
+                        for(var licznik=0 ; licznik<=licznikTablicy ; licznik++)
+                        {
+                            if(sale[licznik]==imiona[0] || sale[licznik]==imiona[1])
+                            {
+                                sale[licznik]="";
+                            }
+                        }
+                        
+                    }
+                }
+                
+                for(var licznik=0 ; licznik<=licznikTablicy-1 ; licznik++)
+                {      
+                    if(licznikTablicy==1 && sale[licznik]!="")
+                    {
+                        koniu.innerHTML="Sala: "+sale[licznik]+" jest wolna";
+                    }
+                    else if(licznikTablicy>1)
+                    {
+                        koniu.innerHTML+=sale[licznik]+" ";
+                    }
+                    else
+                    {
+                        koniu.innerHTML="Nie ma wolnych sal";
+                    }                   
+                }
+        }
+    
+    </script>
+</body>
+</html>
