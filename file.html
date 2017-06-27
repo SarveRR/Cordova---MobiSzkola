@@ -1,0 +1,50 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <script src="scripts/sql.js-master/js/sql.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/index.css">
+    <script type='application/javascript' src='scripts/fastclick-master/lib/fastclick.js'></script>
+    <script type="text/javascript" charset="utf-8" src="cordova.js"></script> 
+</head>
+<body>
+
+    <div class="container"><a href="index.html" class="button"> wróć </a>
+    </div>
+
+    <script>
+        document.addEventListener("deviceready", onDeviceReady, false);
+        function onDeviceReady() {
+            console.log(FileTransfer);
+        }
+
+        console.log("przed");
+
+        var fileTransfer = new FileTransfer();
+        //var uri = encodeURI("http://s14.postimg.org/i8qvaxyup/bitcoin1.jpg");
+        //var fileURL = "///storage/emulated/0/DCIM/myFile";
+
+        console.log("po");
+
+       // fileTransfer.download(
+          //  uri,
+          //  fileURL,
+          //  function (entry) {
+          //      console.log("download complete: " + entry.toURL());
+          //  },
+          //  function (error) {
+          //      console.log("download error source " + error.source);
+          //      console.log("download error target " + error.target);
+          //      console.log("download error code" + error.code);
+         //   },
+         //   false,
+         //   {
+         //       headers: {
+        //            "Authorization": "Basic dGVzdHVzZXJuYW1lOnRlc3RwYXNzd29yZA=="
+        //        }
+        //    }
+        //);
+
+    </script>
+</body>
+</html>
